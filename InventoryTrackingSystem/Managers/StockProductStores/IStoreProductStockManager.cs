@@ -1,4 +1,5 @@
 using InventoryTrackingSystem.DTOs.StoreProductStockDTOs;
+using InventoryTrackingSystem.DTOs.StockMovementDTOs;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -9,7 +10,7 @@ namespace InventoryTrackingSystem.Managers.StoreProductStocks
         Task<IEnumerable<StoreProductStockDTO>> GetAllStoreProductStocksAsync();
         Task<StoreProductStockDTO> GetStoreProductStockByIdAsync(int id);
         Task<StoreProductStockDTO> AddStoreProductStockAsync(StoreProductStockCreateDTO storeProductStockCreateDTO);
-        Task<StoreProductStockDTO> UpdateStoreProductStockAsync(StoreProductStockDTO storeProductStockDTO);
+        Task<StoreProductStockDTO> UpdateStockAsync(StockMovementCreateDTO createDTO,int userId,string userName);
         Task DeleteStoreProductStockAsync(int id);
     }
 }

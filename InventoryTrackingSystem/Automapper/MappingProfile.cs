@@ -11,17 +11,18 @@ namespace InventoryTrackingSystem.Automapper
     {
         public MappingProfile()
         {
-            CreateMap<Product, ProductDTO>();
-            CreateMap<ProductDTO, Product>();
-            CreateMap<ProductCreateDTO, Product>();
+            CreateMap<Product, ProductDTO>().ReverseMap();
+            CreateMap<ProductDTO, Product>().ReverseMap();
+            CreateMap<ProductCreateDTO, Product>().ReverseMap();
 
-            CreateMap<Store, StoreDTO>();
-            CreateMap<StoreDTO, Store>();
+            CreateMap<Store, StoreDTO>().ReverseMap();
+            CreateMap<StoreDTO, Store>().ReverseMap();
             CreateMap<StoreCreateDTO, Store>();
 
-            CreateMap<StockMovement, StockMovementDTO>();
-            CreateMap<StockMovementDTO, StockMovement>();
+            CreateMap<StockMovement, StockMovementDTO>().ReverseMap();
+            CreateMap<StockMovementDTO, StockMovement>().ReverseMap();
             CreateMap<StockMovementCreateDTO, StockMovement>();
+            CreateMap<StockMovementReportDTO, StockMovement>().ReverseMap();
 
             CreateMap<StoreProductStock, StoreProductStockDTO>();
             CreateMap<StoreProductStockDTO, StoreProductStock>();
@@ -32,6 +33,7 @@ namespace InventoryTrackingSystem.Automapper
                 .ForMember(dest => dest.PasswordHash, opt => opt.Ignore());
             CreateMap<UserUpdateDTO, User>()
                 .ForMember(dest => dest.PasswordHash, opt => opt.Ignore());
+            CreateMap<User, UserLoginDTO>().ReverseMap();
         }
     }
 }

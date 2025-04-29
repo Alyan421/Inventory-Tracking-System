@@ -12,6 +12,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi.Models;
+using AspNetCoreRateLimit;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,7 +20,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Register Managers
+// Register Managers and Generic Repository
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<IProductManager, ProductManager>();
 builder.Services.AddScoped<IStoreManager, StoreManager>();
@@ -49,6 +50,13 @@ builder.Services.AddAuthentication(options =>
             Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
     };
 });
+
+//Rate limiting
+// Add rate-limiting services
+builder.Services.AddMemoryCache();
+builder.Services.Configure<IpRateLimitOptions>(builder.Configuration.GetSection("IpRateLimiting"));
+builder.Services.AddInMemoryRateLimiting();
+builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
 
 builder.Services.AddControllers();
 
@@ -103,6 +111,8 @@ if (app.Environment.IsDevelopment())
 // CORRECT ORDER: Authentication BEFORE Authorization
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseIpRateLimiting(); // Add rate-limiting middleware
 
 app.MapControllers();
 

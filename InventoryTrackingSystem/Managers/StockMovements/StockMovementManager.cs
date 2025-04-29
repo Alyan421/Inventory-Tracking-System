@@ -19,6 +19,43 @@ namespace InventoryTrackingSystem.Managers.StockMovements
             _mapper = mapper;
         }
 
+        public async Task<IEnumerable<StockMovementDTO>> FilterByProductRangeAsync(int minProductId, int maxProductId)
+        {
+            var filteredMovements = await _stockMovementRepository.GetListAsync(sm =>
+                sm.ProductId >= minProductId && sm.ProductId <= maxProductId);
+
+            return _mapper.Map<IEnumerable<StockMovementDTO>>(filteredMovements);
+        }
+
+
+        public async Task<IEnumerable<StockMovementDTO>> FilterByStoreAsync(int storeId)
+        {
+            var filteredMovements = await _stockMovementRepository.GetListAsync(sm =>
+                sm.StoreId == storeId);
+
+            return _mapper.Map<IEnumerable<StockMovementDTO>>(filteredMovements);
+        }
+
+
+        public async Task<IEnumerable<StockMovementDTO>> FilterByMovementTypeAsync(string movementType)
+        {
+            var filteredMovements = await _stockMovementRepository.GetListAsync(sm =>
+                sm.MovementType.Equals(movementType, StringComparison.OrdinalIgnoreCase));
+
+            return _mapper.Map<IEnumerable<StockMovementDTO>>(filteredMovements);
+        }
+
+
+        public async Task<IEnumerable<StockMovementDTO>> FilterByQuantityRangeAsync(int minQuantity, int maxQuantity)
+        {
+            var filteredMovements = await _stockMovementRepository.GetListAsync(sm =>
+                sm.Quantity >= minQuantity && sm.Quantity <= maxQuantity);
+
+            return _mapper.Map<IEnumerable<StockMovementDTO>>(filteredMovements);
+        }
+
+
+
         public async Task<IEnumerable<StockMovementDTO>> GetAllStockMovementsAsync()
         {
             try
@@ -84,5 +121,28 @@ namespace InventoryTrackingSystem.Managers.StockMovements
                 throw new ApplicationException($"An error occurred while deleting the stock movement with ID {id}.", ex);
             }
         }
+
+
+        public async Task<IEnumerable<StockMovementReportDTO>> GetAggregatedReportAsync(int storeId, DateTime startDate, DateTime endDate)
+        {
+            // Fetch stock movements for the given store and date range
+            var movements = await _stockMovementRepository.GetListAsync(sm =>
+                sm.StoreId == storeId &&
+                sm.Timestamp >= startDate &&
+                sm.Timestamp <= endDate);
+
+            // Group by ProductId and calculate totals for "IN" and "OUT" movements
+            var report = movements
+                .GroupBy(sm => sm.ProductId)
+                .Select(g => new StockMovementReportDTO
+                {
+                    ProductId = g.Key,
+                    TotalIn = g.Where(sm => sm.MovementType == "IN").Sum(sm => sm.Quantity),
+                    TotalOut = g.Where(sm => sm.MovementType == "OUT").Sum(sm => sm.Quantity)
+                });
+
+            return report;
+        }
+
     }
 }

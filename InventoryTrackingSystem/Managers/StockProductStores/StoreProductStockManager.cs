@@ -5,17 +5,25 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using InventoryTrackingSystem.DTOs.StoreProductStockDTOs;
+using InventoryTrackingSystem.DTOs.StockMovementDTOs;
+using InventoryTrackingSystem.Migrations;
+using System.Security.Claims;
 
 namespace InventoryTrackingSystem.Managers.StoreProductStocks
 {
     public class StoreProductStockManager : IStoreProductStockManager
     {
         private readonly IGenericRepository<StoreProductStock> _storeProductStockRepository;
+        private readonly IGenericRepository<StockMovement> _stockMovementRepository;
         private readonly IMapper _mapper;
 
-        public StoreProductStockManager(IGenericRepository<StoreProductStock> storeProductStockRepository, IMapper mapper)
+        public StoreProductStockManager(
+            IGenericRepository<StoreProductStock> storeProductStockRepository,
+            IGenericRepository<StockMovement> stockMovementRepository,
+            IMapper mapper)
         {
             _storeProductStockRepository = storeProductStockRepository;
+            _stockMovementRepository = stockMovementRepository;
             _mapper = mapper;
         }
 
@@ -59,18 +67,71 @@ namespace InventoryTrackingSystem.Managers.StoreProductStocks
             }
         }
 
-        public async Task<StoreProductStockDTO> UpdateStoreProductStockAsync(StoreProductStockDTO storeProductStockDTO)
+        public async Task<StoreProductStockDTO> UpdateStockAsync(StockMovementCreateDTO createDTO,int userId,string userName)
         {
-            try
+            // Validate movement type first
+            if (createDTO.MovementType != "IN" && createDTO.MovementType != "OUT")
             {
-                var storeProductStock = _mapper.Map<StoreProductStock>(storeProductStockDTO);
-                await _storeProductStockRepository.UpdateAsync(storeProductStock);
-                return _mapper.Map<StoreProductStockDTO>(storeProductStock);
+                throw new ArgumentException("Invalid movement type. Use 'IN' or 'OUT'.");
             }
-            catch (Exception ex)
+
+            // Check for negative quantity
+            if (createDTO.Quantity <= 0)
             {
-                throw new ApplicationException("An error occurred while updating the store product stock.", ex);
+                throw new ArgumentException("Quantity must be greater than zero.");
             }
+
+            // Find or create stock entry
+            var stock = await _storeProductStockRepository.GetSingleAsync(sps =>
+                sps.StoreId == createDTO.StoreID && sps.ProductId == createDTO.ProductId);
+
+            if (stock == null)
+            {
+                // Only allow creation for "IN" movements
+                if (createDTO.MovementType != "IN")
+                {
+                    throw new InvalidOperationException("Cannot perform OUT movement on non-existent stock.");
+                }
+
+                // Create new stock entry
+                stock = new StoreProductStock
+                {
+                    StoreId = createDTO.StoreID,
+                    ProductId = createDTO.ProductId,
+                    Quantity = createDTO.Quantity
+                };
+                await _storeProductStockRepository.AddAsync(stock);
+            }
+
+            // Update existing stock
+            if (createDTO.MovementType == "IN")
+            {
+                stock.Quantity += createDTO.Quantity;
+            }
+            else // OUT movement
+            {
+                if (stock.Quantity < createDTO.Quantity)
+                {
+                    throw new InvalidOperationException($"Insufficient stock. Available: {stock.Quantity}, Requested: {createDTO.Quantity}");
+                }
+                stock.Quantity -= createDTO.Quantity;
+            }
+            await _storeProductStockRepository.UpdateAsync(stock);
+
+            // Record the movement
+            var stockMovement = new StockMovement
+            {
+                StoreId = createDTO.StoreID,
+                ProductId = createDTO.ProductId,
+                Quantity = createDTO.Quantity,
+                MovementType = createDTO.MovementType,
+                Timestamp = DateTime.UtcNow,
+                CreatedById = userId,
+                CreatedByName = userName
+            };
+            await _stockMovementRepository.AddAsync(stockMovement);
+
+            return _mapper.Map<StoreProductStockDTO>(stock);
         }
 
         public async Task DeleteStoreProductStockAsync(int id)

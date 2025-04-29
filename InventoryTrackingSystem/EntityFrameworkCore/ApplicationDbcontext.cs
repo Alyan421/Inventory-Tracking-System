@@ -90,7 +90,8 @@ namespace InventoryTrackingSystem.EntityFrameworkCore
                 entity.Property(sm => sm.Quantity).IsRequired();
                 entity.Property(sm => sm.MovementType).IsRequired().HasMaxLength(50);
                 entity.Property(sm => sm.Timestamp).IsRequired();
-                entity.Property(sm => sm.CreatedBy).IsRequired().HasMaxLength(100);
+                entity.Property(sm => sm.CreatedById).IsRequired();
+                entity.Property(sm => sm.CreatedByName).IsRequired().HasMaxLength(100);
 
                 entity.HasOne<Product>()
                       .WithMany()
