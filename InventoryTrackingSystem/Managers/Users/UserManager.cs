@@ -41,7 +41,7 @@ namespace InventoryTrackingSystem.Managers.Users
             return _mapper.Map<UserResponseDTO>(user);
         }
 
-        public async Task<UserUpdateDTO> UpdateUserAsync(int id, UserUpdateDTO dto)
+        public async Task<UserResponseDTO> UpdateUserAsync(int id, UserUpdateDTO dto)
         {
             var user = await _userRepository.GetByIdAsync(id);
             if (user == null)
@@ -57,6 +57,7 @@ namespace InventoryTrackingSystem.Managers.Users
 
             user.Username = dto.Username;
             user.Email = dto.Email;
+            user.StoreId = dto.StoreId;
 
             if (!string.IsNullOrWhiteSpace(dto.Password))
             {
@@ -65,7 +66,7 @@ namespace InventoryTrackingSystem.Managers.Users
             }
 
             await _userRepository.UpdateAsync(user);
-            return _mapper.Map<UserUpdateDTO>(user);
+            return _mapper.Map<UserResponseDTO>(user);
         }
 
         public async Task<string> LoginAsync(UserLoginDTO dto)

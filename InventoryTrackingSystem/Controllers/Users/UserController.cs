@@ -88,10 +88,17 @@ namespace InventoryManagementSystem.Controllers.Users
         // 🔐 Only Authorized users
         [HttpPut("me")]
         [Authorize]
-        public async Task<IActionResult> UpdateCurrentUser([FromBody] UserUpdateDTO dto)
+        public async Task<IActionResult> UpdateCurrentUser(int id,[FromBody] UserUpdateDTO dto)
         {
             // Get current user's ID from claims
             var currentUserId = int.Parse(User.FindFirst("UserId")?.Value);
+
+            if (currentUserId != id)
+                return Forbid(); // User is trying to update a different user
+
+            if(dto.Password.Length < 6)
+                return BadRequest("Password must be at least 6 characters long.");
+
             var updatedUser = await _userManager.UpdateUserAsync(currentUserId, dto);
             if (updatedUser == null)
                 return NotFound();

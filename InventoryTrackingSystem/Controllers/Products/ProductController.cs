@@ -4,11 +4,13 @@ using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using InventoryTrackingSystem.DTOs.ProductDTOs;
+using Microsoft.AspNetCore.Authorization;
 
 namespace InventoryTrackingSystem.Controllers.Products
 {
     [Route("api/products")]
     [ApiController]
+    [Authorize(Roles = "Bazaar,Admin")] // Class-level authorization for all endpoints
     public class ProductController : ControllerBase, IProductController
     {
         private readonly IProductManager _productManager;
@@ -18,7 +20,7 @@ namespace InventoryTrackingSystem.Controllers.Products
             _productManager = productManager;
         }
 
-        [HttpGet]
+        [HttpGet("All-products")]
         public async Task<ActionResult<IEnumerable<ProductDTO>>> GetAll()
         {
             return Ok(await _productManager.GetAllProductsAsync());

@@ -8,6 +8,7 @@ namespace InventoryTrackingSystem.Models
         public int Quantity { get; set; }
         public string MovementType { get; set; }
         public DateTime Timestamp { get; set; }
-        public string CreatedBy { get; set; }
+        public int CreatedById { get; set; }
+        public string CreatedByName { get; set; } // Name of the user who created the movement
     }
 }

@@ -11,7 +11,7 @@ namespace InventoryTrackingSystem.Managers.Users
         Task<string> LoginAsync(UserLoginDTO dto);
         Task<UserResponseDTO> GetByUsernameAsync(string username);
         Task<IEnumerable<UserResponseDTO>> GetAllUsersAsync();
-        Task<UserUpdateDTO> UpdateUserAsync(int id, UserUpdateDTO dto);
+        Task<UserResponseDTO> UpdateUserAsync(int id, UserUpdateDTO dto);
         Task<bool> DeleteUserAsync(int id);
     }
 }
